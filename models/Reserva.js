@@ -1,15 +1,17 @@
 import mongoose from 'mongoose';
 
-const reservaSchema = new mongoose.Schema({
-  fecha: { type: String, required: true },
-  hora: { type: String, required: true },
-  tipo: { type: String, required: true },
-  usuarios: [
-    {
-      dni: String,
-      nombre: String
-    }
-  ]
+const usuarioReservaSchema = new mongoose.Schema({
+  dni: { type: String, required: true },
+  nombre: { type: String, required: true },
 });
 
-export default mongoose.model('Reserva', reservaSchema);
+const reservaSchema = new mongoose.Schema({
+  fecha: { type: String, required: true }, 
+  hora: { type: String, required: true },  
+  tipo: { type: String, required: true },  
+  usuarios: [usuarioReservaSchema],       
+});
+
+const Reserva = mongoose.model('Reserva', reservaSchema);
+
+export default Reserva;
