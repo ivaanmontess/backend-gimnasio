@@ -7,7 +7,8 @@ const userSchema = new mongoose.Schema({
   direccion: String,
   fechaNacimiento: Date,
   fechaVencimiento: Date,         
-  membresiaActiva: Boolean,       
+  membresiaActiva: Boolean,     
+  fechaPago: Date,  
 });
 
 module.exports = mongoose.model('User', userSchema);
