@@ -26,6 +26,23 @@ export default function App() {
     })();
   }, []);
 
+  const [nuevoUsuario, setNuevoUsuario] = useState({
+  nombre: '',
+  email: '',
+  telefono: '',
+  direccion: '',
+  fechaNacimiento: '',
+  fechaVencimiento: '',
+  membresiaActiva: '',
+  fechaPago: ''
+});
+
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setNuevoUsuario(prev => ({ ...prev, [name]: value }));
+};
+
+
   const buscarUsuario = async () => {
     try {
       const res = await axios.get(`https://backend-gimnasio-fqfn.onrender.com/api/usuarios/${dni}`);
@@ -64,15 +81,111 @@ export default function App() {
         <Text style={estilos.botonTexto}>Buscar</Text>
       </TouchableOpacity>
 
-      {usuario && (
-        <View style={estilos.usuarioCard}>
-          <Text style={estilos.usuarioTexto}>Nombre: {usuario.nombre}</Text>
-          <Text style={estilos.usuarioTexto}>Estado de membresía: {usuario.membresiaActiva ? 'Activa' : 'Vencida'}</Text>
-        </View>
-      )}
+      {mostrarFormulario && (
+  <form className="formulario-usuario" onSubmit={handleCrearUsuario}>
+    <input
+      type="text"
+      name="nombre"
+      placeholder="Nombre"
+      value={nuevoUsuario.nombre}
+      onChange={handleChange}
+      required
+    />
+    <input
+      type="email"
+      name="email"
+      placeholder="Email"
+      value={nuevoUsuario.email}
+      onChange={handleChange}
+      required
+    />
+    <input
+      type="text"
+      name="telefono"
+      placeholder="Teléfono"
+      value={nuevoUsuario.telefono}
+      onChange={handleChange}
+    />
+    <input
+      type="text"
+      name="direccion"
+      placeholder="Dirección"
+      value={nuevoUsuario.direccion}
+      onChange={handleChange}
+    />
+    <input
+      type="date"
+      name="fechaNacimiento"
+      value={nuevoUsuario.fechaNacimiento}
+      onChange={handleChange}
+    />
+    <input
+      type="date"
+      name="fechaVencimiento"
+      value={nuevoUsuario.fechaVencimiento}
+      onChange={handleChange}
+      required
+    />
+
+    <label>
+      ¿Pagó?
+      <select
+        name="membresiaActiva"
+        value={nuevoUsuario.membresiaActiva}
+        onChange={handleChange}
+        required
+      >
+        <option value="">Seleccionar</option>
+        <option value="true">Sí</option>
+        <option value="false">No</option>
+      </select>
+    </label>
+
+    {nuevoUsuario.membresiaActiva === 'true' && (
+      <input
+        type="date"
+        name="fechaPago"
+        value={nuevoUsuario.fechaPago}
+        onChange={handleChange}
+        required
+      />
+    )}
+
+    <button type="submit">Guardar</button>
+  </form>
+)}
+
     </View>
   );
 }
+const handleCrearUsuario = async (e) => {
+  e.preventDefault();
+  try {
+    const usuarioAEnviar = {
+      ...nuevoUsuario,
+      membresiaActiva: nuevoUsuario.membresiaActiva === 'true',
+    };
+
+    await crearUsuario(usuarioAEnviar);
+    setNuevoUsuario({
+      nombre: '',
+      email: '',
+      telefono: '',
+      direccion: '',
+      fechaNacimiento: '',
+      fechaVencimiento: '',
+      membresiaActiva: '',
+      fechaPago: ''
+    });
+    setMostrarFormulario(false);
+    cargarUsuarios();
+  } catch (error) {
+    alert('Error al crear usuario');
+  }
+};
+<p><strong>Fecha de pago:</strong> {usuario.fechaPago?.substring(0, 10) || '-'}</p>
+
+
 
 function crearEstilos(modoOscuro) {
   return StyleSheet.create({
@@ -131,5 +244,7 @@ function crearEstilos(modoOscuro) {
       color: modoOscuro ? '#fff' : '#000',
       marginBottom: 5,
     },
-  });
+    
+  }
+);
 }
