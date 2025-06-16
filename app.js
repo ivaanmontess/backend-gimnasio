@@ -1,3 +1,6 @@
+require('dotenv').config(); // en la línea superior, antes de usar process.env
+
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
