@@ -4,10 +4,24 @@ const ExcelJS = require('exceljs');
 // Crear usuario
 const crearUsuario = async (req, res) => {
   try {
+    const { nombre, apellido, documento, celular, direccion, fechaNacimiento, membresiaPagada } = req.body;
+
+    // Validación básica de campos obligatorios
+    if (!nombre || !apellido || !documento) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: nombre, apellido o documento' });
+    }
+
     const nuevoUsuario = new User({
-      ...req.body,
-      fechaUltimoPago: new Date()
+      nombre,
+      apellido,
+      documento,
+      celular,
+      direccion,
+      fechaNacimiento,
+      membresiaPagada,
+      fechaUltimoPago: membresiaPagada ? new Date() : null
     });
+
     await nuevoUsuario.save();
     res.status(201).json(nuevoUsuario);
   } catch (error) {
@@ -15,10 +29,10 @@ const crearUsuario = async (req, res) => {
   }
 };
 
-// Obtener todos los usuarios
+// Obtener todos los usuarios (ordenados por fecha de último pago descendente)
 const obtenerUsuarios = async (req, res) => {
   try {
-    const usuarios = await User.find();
+    const usuarios = await User.find().sort({ fechaUltimoPago: -1 });
     res.json(usuarios);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -38,7 +52,7 @@ const actualizarMembresia = async (req, res) => {
       req.params.id,
       {
         membresiaPagada,
-        fechaUltimoPago: new Date()
+        fechaUltimoPago: membresiaPagada ? new Date() : null
       },
       { new: true }
     );
@@ -68,7 +82,6 @@ const detectarMembresiasVencidas = async (req, res) => {
   try {
     const hoy = new Date();
     const usuarios = await User.find();
-
     let actualizados = [];
 
     for (const usuario of usuarios) {
@@ -91,12 +104,11 @@ const detectarMembresiasVencidas = async (req, res) => {
   }
 };
 
-// Membresías que vencen en los próximos 5 días
+// Obtener usuarios con membresía próxima a vencer (en los próximos 5 días)
 const obtenerMembresiasProximasAVencer = async (req, res) => {
   try {
     const hoy = new Date();
-    const enCincoDias = new Date();
-    enCincoDias.setDate(hoy.getDate() + 5);
+    const diasAviso = 5;
 
     const usuarios = await User.find({
       fechaUltimoPago: { $exists: true },
@@ -105,7 +117,7 @@ const obtenerMembresiasProximasAVencer = async (req, res) => {
 
     const proximosAVencer = usuarios.filter(usuario => {
       const dias = Math.floor((hoy - usuario.fechaUltimoPago) / (1000 * 60 * 60 * 24));
-      return dias >= 25 && dias <= 30;
+      return dias >= (30 - diasAviso) && dias < 30;
     });
 
     res.status(200).json(proximosAVencer);
@@ -120,7 +132,7 @@ const obtenerMembresiasProximasAVencer = async (req, res) => {
 // Exportar usuarios a Excel
 const exportarUsuariosExcel = async (req, res) => {
   try {
-    const usuarios = await User.find();
+    const usuarios = await User.find().sort({ fechaUltimoPago: -1 });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Usuarios');
@@ -137,7 +149,16 @@ const exportarUsuariosExcel = async (req, res) => {
     ];
 
     usuarios.forEach(user => {
-      worksheet.addRow(user);
+      worksheet.addRow({
+        nombre: user.nombre,
+        apellido: user.apellido,
+        documento: user.documento,
+        celular: user.celular,
+        direccion: user.direccion,
+        fechaNacimiento: user.fechaNacimiento,
+        fechaUltimoPago: user.fechaUltimoPago,
+        membresiaPagada: user.membresiaPagada
+      });
     });
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -150,7 +171,7 @@ const exportarUsuariosExcel = async (req, res) => {
   }
 };
 
-// Exportación final
+// Exportación
 module.exports = {
   crearUsuario,
   obtenerUsuarios,
