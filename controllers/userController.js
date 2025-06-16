@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const User = require('../models/Usuarios');
 const ExcelJS = require('exceljs');
 
 // Crear usuario
