@@ -1,12 +1,12 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import cron from 'node-cron';
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const cron = require('node-cron');
 
-import userRoutes from './routes/usuarios.js';
-import reservasRoutes from './routes/reservas.js';
-import Reserva from './models/Reserva.js';
+const userRoutes = require('./routes/Usuarios');
+const reservasRoutes = require('./routes/reservas');
+const Reserva = require('./models/Reserva');
 
 dotenv.config();
 
@@ -17,12 +17,16 @@ app.use(express.json());
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+}).then(() => {
+  console.log('✅ Conectado a MongoDB');
+}).catch((err) => {
+  console.error('❌ Error de conexión a MongoDB:', err);
 });
 
 app.use('/api/usuarios', userRoutes);
 app.use('/api/reservas', reservasRoutes);
 
-// Crear clases automáticamente cada domingo para la semana siguiente
+// Cron para generar clases semanalmente
 cron.schedule('0 12 * * 0', async () => {
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -30,14 +34,12 @@ cron.schedule('0 12 * * 0', async () => {
   for (let i = 0; i < 7; i++) {
     const fecha = new Date(hoy);
     fecha.setDate(hoy.getDate() + i);
-
     const dia = fecha.getDay();
     const fechaStr = fecha.toISOString().split('T')[0];
 
     let clases = [];
 
     if (dia >= 1 && dia <= 5) {
-      // Lunes a viernes
       const horarios = [
         ...generarHorarios('Funcional', 7, 11),
         ...generarHorarios('Funcional', 13, dia === 2 || dia === 4 ? 14 : 15),
@@ -46,7 +48,6 @@ cron.schedule('0 12 * * 0', async () => {
       ];
       clases = horarios.map(h => ({ fecha: fechaStr, hora: h.hora, tipo: h.tipo }));
     } else if (dia === 6) {
-      // Sábado
       const horarios = generarHorarios('Funcional y Musculacion', 7, 13);
       clases = horarios.map(h => ({ fecha: fechaStr, hora: h.hora, tipo: h.tipo }));
     }
@@ -70,5 +71,5 @@ function generarHorarios(tipo, desde, hasta) {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });
