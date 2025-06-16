@@ -1,8 +1,6 @@
-
-import express from 'express';
-import Reserva from '../models/Reserva.js';
-
+const express = require('express');
 const router = express.Router();
+const Reserva = require('../models/Reserva');
 
 // Obtener todas las clases disponibles
 router.get('/', async (req, res) => {
@@ -44,4 +42,4 @@ router.post('/reservar', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

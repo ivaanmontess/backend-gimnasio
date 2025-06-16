@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const usuarioReservaSchema = new mongoose.Schema({
   dni: { type: String, required: true },
@@ -12,6 +12,4 @@ const reservaSchema = new mongoose.Schema({
   usuarios: [usuarioReservaSchema],       
 });
 
-const Reserva = mongoose.model('Reserva', reservaSchema);
-
-export default Reserva;
+module.exports = mongoose.model('Reserva', reservaSchema);
