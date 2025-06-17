@@ -1,5 +1,4 @@
-require('dotenv').config(); // en la línea superior, antes de usar process.env
-
+require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -25,6 +24,8 @@ mongoose.connect(process.env.MONGODB_URI, {
 }).catch((err) => {
   console.error('❌ Error de conexión a MongoDB:', err);
 });
+console.log('MONGO_URI:', process.env.MONGO_URI);
+
 
 app.use('/api/usuarios', userRoutes);
 app.use('/api/reservas', reservasRoutes);
