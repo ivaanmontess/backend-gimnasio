@@ -3,20 +3,17 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const cron = require('node-cron');
 
 const usuarioRoutes = require('./routes/Usuarios');
 const reservasRoutes = require('./routes/reservas');
 const Reserva = require('./models/Reserva');
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use('/usuarios', require('./routes/Usuarios'));
 
-
+// Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -25,11 +22,10 @@ mongoose.connect(process.env.MONGO_URI, {
 }).catch((err) => {
   console.error('❌ Error de conexión a MongoDB:', err);
 });
-console.log('MONGO_URI:', process.env.MONGO_URI);
 
-
-app.use('/api/usuarios', userRoutes);
-app.use('/api/reservas', reservasRoutes);
+// Rutas principales
+app.use('/usuarios', usuarioRoutes);
+app.use('/reservas', reservasRoutes);
 
 // Cron para generar clases semanalmente
 cron.schedule('0 12 * * 0', async () => {
