@@ -1,35 +1,45 @@
 const User = require('../models/Usuarios');
 const ExcelJS = require('exceljs');
 
-// Crear usuario
+// Crear usuario (adaptado al formato del frontend)
 const crearUsuario = async (req, res) => {
   try {
-    const { nombre, apellido, documento, celular, direccion, fechaNacimiento, membresiaPagada } = req.body;
+    const {
+      nombre,
+      dni,
+      email,
+      telefono,
+      direccion,
+      fechaNacimiento,
+      fechaVencimiento,
+      membresiaActiva,
+      fechaPago
+    } = req.body;
 
-    // Validación básica de campos obligatorios
-    if (!nombre || !apellido || !documento) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios: nombre, apellido o documento' });
+    if (!nombre || !dni) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios: nombre o DNI' });
     }
 
     const nuevoUsuario = new User({
       nombre,
-      apellido,
-      documento,
-      celular,
+      apellido: '',
+      documento: dni,
+      celular: telefono,
       direccion,
       fechaNacimiento,
-      membresiaPagada,
-      fechaUltimoPago: membresiaPagada ? new Date() : null
+      fechaUltimoPago: fechaPago ? new Date(fechaPago) : null,
+      membresiaPagada: membresiaActiva === true || membresiaActiva === 'true'
     });
 
     await nuevoUsuario.save();
     res.status(201).json(nuevoUsuario);
   } catch (error) {
+    console.error('❌ Error al crear usuario:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// Obtener todos los usuarios (ordenados por fecha de último pago descendente)
+// Obtener todos los usuarios
 const obtenerUsuarios = async (req, res) => {
   try {
     const usuarios = await User.find().sort({ fechaUltimoPago: -1 });
@@ -39,20 +49,16 @@ const obtenerUsuarios = async (req, res) => {
   }
 };
 
-// Actualizar membresía (pago)
+// Actualizar membresía
 const actualizarMembresia = async (req, res) => {
   try {
-    const { membresiaPagada } = req.body;
-
-    if (typeof membresiaPagada === 'undefined') {
-      return res.status(400).json({ error: 'Falta el campo membresiaPagada en el body' });
-    }
+    const { membresiaPagada, fechaUltimoPago } = req.body;
 
     const usuario = await User.findByIdAndUpdate(
       req.params.id,
       {
         membresiaPagada,
-        fechaUltimoPago: membresiaPagada ? new Date() : null
+        fechaUltimoPago: membresiaPagada ? (fechaUltimoPago ? new Date(fechaUltimoPago) : new Date()) : null
       },
       { new: true }
     );
@@ -77,7 +83,7 @@ const eliminarUsuario = async (req, res) => {
   }
 };
 
-// Detectar membresías vencidas manualmente
+// Detectar membresías vencidas
 const detectarMembresiasVencidas = async (req, res) => {
   try {
     const hoy = new Date();
@@ -104,7 +110,7 @@ const detectarMembresiasVencidas = async (req, res) => {
   }
 };
 
-// Obtener usuarios con membresía próxima a vencer (en los próximos 5 días)
+// Obtener usuarios con membresías próximas a vencer
 const obtenerMembresiasProximasAVencer = async (req, res) => {
   try {
     const hoy = new Date();
@@ -171,7 +177,6 @@ const exportarUsuariosExcel = async (req, res) => {
   }
 };
 
-// Exportación
 module.exports = {
   crearUsuario,
   obtenerUsuarios,
