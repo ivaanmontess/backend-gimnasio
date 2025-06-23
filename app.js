@@ -24,7 +24,7 @@ mongoose.connect(process.env.MONGO_URI, {
 });
 
 // Rutas principales
-app.use('/usuarios', usuarioRoutes);
+app.use('/usuarios', require('./routes/Usuarios'));
 app.use('/reservas', reservasRoutes);
 
 // Cron para generar clases semanalmente
